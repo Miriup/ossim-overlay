@@ -1,0 +1,260 @@
+diff -ur ossim-1.8.4/ossimPlanet/Make/makedefs ossim-1.8.4/ossimPlanet/Make/makedefs
+--- ossim-1.8.4/ossimPlanet/Make/makedefs	2010-03-10 17:29:32.000000000 +0400
++++ ossim-1.8.4/ossimPlanet/Make/makedefs	2011-05-24 02:19:20.000000000 +0400
+@@ -183,7 +183,15 @@
+ CC=gcc
+ 
+ OSSIM_LIBS=
+-OSG_LIBS          = -L/usr/local/lib64 -L/usr/local/lib -L/usr/local/bin -losgViewer -losgText -losgGA -losgDB -losgUtil -losg -lOpenThreads -lossimPredator -lossim -ljpeg -lz -lgpstk
++OSG_LIBS          = -L/usr/local/lib64 -L/usr/local/lib -L/usr/local/bin -losgViewer -losgText -losgGA -losgDB -losgUtil -losg -lOpenThreads -lossim -ljpeg -lz 
++
++ifneq ("$(ENABLE_PREDATOR)","no")
++	OSG_LIBS+=-lossimPredator 
++endif
++
++ifneq ("$(ENABLE_EPHEMERIS)","no")
++	OSG_LIBS+=-lgpstk
++endif
+ 
+ RECURSIVE_TARGETS = \
+ 	  opt\
+diff -ur ossim-1.8.4/ossimPlanet/examples/ossimplanettest/ossimplanettest.cpp ossim-1.8.4/ossimPlanet/examples/ossimplanettest/ossimplanettest.cpp
+--- ossim-1.8.4/ossimPlanet/examples/ossimplanettest/ossimplanettest.cpp	2010-03-10 17:29:32.000000000 +0400
++++ ossim-1.8.4/ossimPlanet/examples/ossimplanettest/ossimplanettest.cpp	2011-05-24 02:41:01.000000000 +0400
+@@ -5,7 +5,9 @@
+ #include <ossimPlanet/ossimPlanetTerrainGeometryTechnique.h>
+ #include <ossimPlanet/ossimPlanetAnimatedPointModel.h>
+ #include <ossimPlanet/ossimPlanetViewMatrixBuilder.h>
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ #include <ossimPlanet/ossimPlanetEphemeris.h>
++#endif
+ #include <ossimPlanet/ossimPlanetOssimImageLayer.h>
+ #include <osgDB/ReadFile>
+ #include <osgGA/GUIEventHandler>
+@@ -622,6 +624,7 @@
+          break;
+       }
+ 		
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ 		case OSSIMPLANET_EPHEMERIS_ANIMATE:
+       {
+          double deltaSec = osg::Timer::instance()->delta_s(theStartTick, osg::Timer::instance()->tick());
+@@ -631,6 +634,7 @@
+          
+          break;
+       }
++#endif
+       case OSSIMPLANET_ANIMATION_PATH:
+       {
+          double deltaSec = osg::Timer::instance()->delta_s(theStartTick, osg::Timer::instance()->tick());
+@@ -878,6 +882,7 @@
+       {
+          break;
+       }
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+       case OSSIMPLANET_ADD_FOG:
+       {
+          if(osg::Timer::instance()->delta_s(theLastAnimationModeTick, osg::Timer::instance()->tick()) > theDuration)
+@@ -935,6 +940,7 @@
+          }
+          break;
+       }
++#endif
+    }
+ }
+ 
+@@ -959,7 +965,9 @@
+ 				}
+ 				viewer->setSceneData(0);
+ 				viewer->setCameraManipulator(0);
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ 				viewer->removeEphemeris();
++#endif
+ 				
+ 				// done clearing pointers
+ 				
+@@ -995,8 +1003,10 @@
+ 				// for any other stage we should have a root scene
+ 				if(!theRootScene.valid()) return;
+ 			
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+          viewer->addEphemeris(ossimPlanetEphemeris::SUN_LIGHT|
+                               ossimPlanetEphemeris::SKY);
++#endif
+ 				
+ 				break;
+ 		}
+@@ -1314,6 +1324,7 @@
+ 			break;
+ 		}
+ 		
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ 		case OSSIMPLANET_INITIALIZE_EPHEMERIS:
+ 		{
+ 			viewer->terrainLayer()->setElevationExaggeration(1); // set elevation exaggeration back to 1x
+@@ -1364,6 +1375,7 @@
+ 			
+ 			break;	
+ 		}
++#endif
+ 		
+ 		// Add Clouds
+ 		case OSSIMPLANET_ADD_CLOUDS:
+@@ -1385,6 +1397,7 @@
+ 			break;	
+ 		}
+ 			
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ 		// Add Fog
+ 		case OSSIMPLANET_ADD_FOG:
+ 		{
+@@ -1414,6 +1427,7 @@
+ 				
+ 				break;
+ 			}
++#endif
+ 		
+ 		case OSSIMPLANET_ANIMATION_PATH:
+ 		{
+diff -ur ossim-1.8.4/ossimPlanet/examples/ossimplanetviewer/ossimplanetviewer.cpp ossim-1.8.4/ossimPlanet/examples/ossimplanetviewer/ossimplanetviewer.cpp
+--- ossim-1.8.4/ossimPlanet/examples/ossimplanetviewer/ossimplanetviewer.cpp	2010-03-10 17:29:32.000000000 +0400
++++ ossim-1.8.4/ossimPlanet/examples/ossimplanetviewer/ossimplanetviewer.cpp	2011-05-24 02:27:49.000000000 +0400
+@@ -24,7 +24,9 @@
+ #include <ossimPlanet/ossimPlanetAnimatedPointModel.h>
+ #include <ossimPlanet/ossimPlanetViewMatrixBuilder.h>
+ #include <ossimPlanet/ossimPlanetCloudLayer.h>
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ #include <ossimPlanet/ossimPlanetEphemeris.h>
++#endif
+ #include <osgGA/TrackballManipulator>
+ #include <osgGA/FlightManipulator>
+ #include <osgGA/DriveManipulator>
+@@ -238,8 +240,10 @@
+ 	arguments.getApplicationUsage()->addCommandLineOption("--animation-path", "Reads in an animation path");
+ 	arguments.getApplicationUsage()->addCommandLineOption("--animation-node", "Reads in an animation node");
+ 	arguments.getApplicationUsage()->addCommandLineOption("--add-kml", "Adds a kml layer to planet");
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ 	arguments.getApplicationUsage()->addCommandLineOption("--moon-image", "Moon image used for the moon sprite for the Ephemeris");
+ 	arguments.getApplicationUsage()->addCommandLineOption("--sun-image", "Moon image used for the moon sprite for the Ephemeris");
++#endif
+ 	arguments.getApplicationUsage()->addCommandLineOption("--visibility", "Visibility in meters");
+ 	arguments.getApplicationUsage()->addCommandLineOption("--fog-near", "near plane for fog attenuation in meters");
+ 	arguments.getApplicationUsage()->addCommandLineOption("--cloud-coverage", "integer value used to adjust the perlin noise");
+@@ -282,8 +286,10 @@
+    osg::ref_ptr<ossimPlanet> planet;
+    double elevationExaggeration = 1.0;
+    double minTimeToCompilePerFrame = .003;
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+    ossimFilename sunTextureFile = "";
+    ossimFilename moonTextureFile = "";
++#endif
+    ossim_float64 visibility = 1000000000.0;
+    ossim_float64 fogNear = 0.0;
+    ossim_int32 cloudCoverage = 20;
+@@ -332,6 +338,7 @@
+          animationPathArray.push_back(animationPath.get());
+       }
+    }
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+    if(arguments.read("--moon-image", stringParam))
+    {
+       moonTextureFile = ossimFilename(tempString);
+@@ -340,6 +347,7 @@
+    {
+       sunTextureFile = ossimFilename(tempString);
+    }
++#endif
+    if(arguments.read("--min-time-compile", stringParam))
+    {
+       minTimeToCompilePerFrame = tempString.toDouble();
+diff -ur ossim-1.8.4/ossimPlanet/src/ossimPlanet/GNUmakefile ossim-1.8.4/ossimPlanet/src/ossimPlanet/GNUmakefile
+--- ossim-1.8.4/ossimPlanet/src/ossimPlanet/GNUmakefile	2010-03-10 17:29:31.000000000 +0400
++++ ossim-1.8.4/ossimPlanet/src/ossimPlanet/GNUmakefile	2011-05-24 02:19:20.000000000 +0400
+@@ -37,7 +37,6 @@
+ ossimPlanetElevationGrid.cpp \
+ ossimPlanetElevationFactory.cpp \
+ ossimPlanetElevationRegistry.cpp \
+-ossimPlanetEphemeris.cpp \
+ ossimPlanetFadeText.cpp \
+ ossimPlanetGeneralRasterElevationDatabase.cpp \
+ ossimPlanetGeocoder.cpp \
+@@ -126,10 +125,14 @@
+ unzip.c \
+ zip.c
+ 
+-ifneq ("$(OSSIMPLANET_ENABLE_PREDATOR)", "no")
++ifneq ("$(ENABLE_PREDATOR)", "no")
+ CXXFILES+=ossimPlanetPredatorVideoLayerNode.cpp
+ endif
+ 
++ifneq ("$(ENABLE_EPHEMERIS)", "no")
++CXXFILES+=ossimPlanetEphemeris.cpp
++endif
++
+ ifeq ($(OS),MINGW)
+ CFILES += iowin32.c
+ endif
+diff -ur ossim-1.8.4/ossimPlanet/src/ossimPlanet/ossimPlanetViewer.cpp ossim-1.8.4/ossimPlanet/src/ossimPlanet/ossimPlanetViewer.cpp
+--- ossim-1.8.4/ossimPlanet/src/ossimPlanet/ossimPlanetViewer.cpp	2010-03-10 17:29:31.000000000 +0400
++++ ossim-1.8.4/ossimPlanet/src/ossimPlanet/ossimPlanetViewer.cpp	2011-05-24 02:32:28.000000000 +0400
+@@ -109,10 +109,12 @@
+             if(!theViewer->thePlanet.valid())
+             {
+                theViewer->thePlanet = planet;
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+                if(theViewer->theEphemerisLayer.valid())
+                {
+                   theViewer->theEphemerisLayer->setModel(planet->model().get());
+                }
++#endif
+                if(theViewer->thePlanet.valid())
+                {
+                   // the viewer will manage setting a valid intersection point
+@@ -356,6 +358,7 @@
+    return theKmlLayer.get();
+ }
+ 
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+ void ossimPlanetViewer::addEphemeris(ossim_uint32 memberBitMask)
+ {
+    if(!theEphemerisLayer.valid())
+@@ -432,6 +435,7 @@
+ {
+    return theEphemerisLayer.get();
+ }
++#endif
+ 
+ void ossimPlanetViewer::requestRedraw()
+ {
+@@ -503,6 +507,7 @@
+    {
+       p->accept(initializePointersVisitor);
+       theRootNode->addChild(p);
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+       if(theEphemerisLayer.valid())
+       {
+          ossimPlanet* tempPlanet = new ossimPlanet;
+@@ -510,6 +515,7 @@
+          tempPlanet->setComputeIntersectionFlag(false);
+          theRootNode->addChild(tempPlanet);
+       }
++#endif
+    }
+    osgViewer::Viewer::setSceneData(theRootNode.get());
+    requestRedraw();
+@@ -581,6 +587,7 @@
+       notifyViewChanged();
+    }
+    osgViewer::Viewer::updateTraversal();
++#ifdef OSSIMPLANET_ENABLE_EPHEMERIS
+    if(theEphemerisCamera.valid())
+    {
+       if(theEphemerisCamera.valid())
+@@ -606,6 +613,7 @@
+       theEphemerisCamera->setProjectionMatrix(getCamera()->getProjectionMatrix());
+       theEphemerisCamera->setViewMatrix(getCamera()->getViewMatrix());
+    }
++#endif
+    bool databasePagerHasRequests = getDatabasePager()?(getDatabasePager()->requiresUpdateSceneGraph()||
+                                                        getDatabasePager()->requiresCompileGLObjects()):false;
+    if(databasePagerHasRequests)
