@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<herd>no-herd</herd>
+	<maintainer>
+		<email>dirk.github@miriup.de</email>
+		<name>Dirk Tilger</name>
+	</maintainer>
+	<longdescription>OSSIM is a high performance software system for remote sensing, image processing , geographical information systems and photogrammetry.</longdescription>
+</pkgmetadata>

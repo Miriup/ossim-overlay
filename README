@@ -1,0 +1,7 @@
+
+ossim-overlay
+
+This is a Gentoo overlay for the awesome remote sensing utility "ossim"
+(http://www.ossim.org). It's intended to be running under both Gentoo mainline
+and Gentoo prefix.
+
