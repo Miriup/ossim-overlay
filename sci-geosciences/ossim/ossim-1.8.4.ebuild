@@ -6,7 +6,6 @@ EAPI=4
 
 DESCRIPTION="High performance software system for remote sensing, image processing, GIS and photogrammetry."
 HOMEPAGE="http://www.ossim.org"
-SRC_URI="http://download.osgeo.org/ossim/src/${P}.tgz"
 
 LICENSE="LGPL-2"
 SLOT="0"

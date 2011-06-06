@@ -7,9 +7,6 @@ MY_PN=ossimPlanet
 
 inherit ossim eutils flag-o-matic
 
-DESCRIPTION="High performance software system for remote sensing, image processing, GIS and photogrammetry."
-HOMEPAGE="http://www.ossim.org"
-
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="~amd64"
